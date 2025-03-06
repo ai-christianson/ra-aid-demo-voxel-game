@@ -92,12 +92,12 @@ void HandlePlayerInput(Player* player) {
     
     // Strafe left/right (A/D keys)
     if (IsKeyDown(KEY_A)) {
-        player->velocity.x -= right.x * PLAYER_MOVE_SPEED;
-        player->velocity.z -= right.z * PLAYER_MOVE_SPEED;
-    }
-    if (IsKeyDown(KEY_D)) {
         player->velocity.x += right.x * PLAYER_MOVE_SPEED;
         player->velocity.z += right.z * PLAYER_MOVE_SPEED;
+    }
+    if (IsKeyDown(KEY_D)) {
+        player->velocity.x -= right.x * PLAYER_MOVE_SPEED;
+        player->velocity.z -= right.z * PLAYER_MOVE_SPEED;
     }
     
     // Jump (Space key)
