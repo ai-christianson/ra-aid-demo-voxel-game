@@ -15,7 +15,7 @@ const int DIRECTION_VECTORS[6][3] = {
 
 // Check if a block type is transparent
 bool IsBlockTransparent(BlockType blockType) {
-    return blockType == BLOCK_EMPTY || blockType == BLOCK_WATER;
+    return blockType == BLOCK_EMPTY || blockType == BLOCK_JELLO;
 }
 
 // Create a new empty world
@@ -86,7 +86,7 @@ bool IsBlockFaceVisible(World* world, int x, int y, int z, int faceDir) {
     
     // A face is visible if:
     // 1. The adjacent block is empty, or
-    // 2. The adjacent block is transparent (like water) and the current block is not transparent
+    // 2. The adjacent block is transparent (like jello) and the current block is not transparent
     return adjacentBlock == BLOCK_EMPTY || 
            (IsBlockTransparent(adjacentBlock) && !IsBlockTransparent(GetBlock(world, x, y, z)));
 }
@@ -128,8 +128,10 @@ bool CheckCollision(World* world, BoundingBox playerBox) {
     for (int x = minX; x <= maxX; x++) {
         for (int y = minY; y <= maxY; y++) {
             for (int z = minZ; z <= maxZ; z++) {
-                // Skip empty blocks
-                if (GetBlock(world, x, y, z) == BLOCK_EMPTY) {
+                BlockType blockType = GetBlock(world, x, y, z);
+                
+                // Skip empty blocks and jello blocks
+                if (blockType == BLOCK_EMPTY || blockType == BLOCK_JELLO) {
                     continue;
                 }
                 

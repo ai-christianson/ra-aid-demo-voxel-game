@@ -10,7 +10,7 @@ typedef enum {
     BLOCK_GRASS,
     BLOCK_SAND,
     BLOCK_STONE,
-    BLOCK_WATER,
+    BLOCK_JELLO,
     BLOCK_TYPE_COUNT
 } BlockType;
 

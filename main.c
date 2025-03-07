@@ -14,7 +14,7 @@ const Color BLOCK_COLORS[BLOCK_TYPE_COUNT] = {
     { 34, 139, 34, 255 },  // BLOCK_GRASS (forest green)
     { 210, 180, 140, 255 },// BLOCK_SAND (tan)
     { 128, 128, 128, 255 },// BLOCK_STONE (gray)
-    { 64, 164, 223, 150 }  // BLOCK_WATER (semi-transparent blue)
+    { 223, 64, 64, 150 }  // BLOCK_JELLO (semi-transparent red)
 };
 
 // Define render distance (how far to render blocks)

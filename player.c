@@ -28,6 +28,7 @@ Player* CreatePlayer(World* world) {
         player->isOnGround = false;
         player->isJumping = false;
         player->isInWater = false;
+        player->isFullyUnderwater = false;
     }
     
     return player;
@@ -104,11 +105,22 @@ void HandlePlayerInput(Player* player) {
         player->velocity.z -= right.z * moveSpeed;
     }
     
-    // Jump (Space key)
-    if (IsKeyPressed(KEY_SPACE) && player->isOnGround) {
-        player->velocity.y = PLAYER_JUMP_FORCE;
-        player->isJumping = true;
-        player->isOnGround = false;
+    // Jump (Space key) or swim up
+    if (IsKeyDown(KEY_SPACE)) {
+        if (player->isInWater) {
+            // Swim up when in water
+            player->velocity.y += PLAYER_SWIM_SPEED;
+        } else if (player->isOnGround) {
+            // Jump when on ground
+            player->velocity.y = PLAYER_JUMP_FORCE;
+            player->isJumping = true;
+            player->isOnGround = false;
+        }
+    }
+    
+    // Swim down (Left Control key)
+    if (IsKeyDown(KEY_LEFT_CONTROL) && player->isInWater) {
+        player->velocity.y -= PLAYER_SWIM_SPEED;
     }
 }
 
@@ -130,25 +142,63 @@ void UpdatePlayerPhysics(Player* player, World* world) {
     BlockType blockAtHead = GetBlock(world, playerX, headY, playerZ);
     
     // Update water state
-    player->isInWater = (blockAtPlayer == BLOCK_WATER || blockAtHead == BLOCK_WATER);
+    bool wasInWater = player->isInWater;
+    bool wasFullyUnderwater = player->isFullyUnderwater;
+    
+    // Check current state
+    player->isInWater = (blockAtPlayer == BLOCK_JELLO || blockAtHead == BLOCK_JELLO);
+    player->isFullyUnderwater = (blockAtHead == BLOCK_JELLO);
     
     // Apply appropriate physics based on environment
     if (player->isInWater) {
-        // Apply buoyancy force (opposite of gravity) when in water
-        if (!player->isOnGround) {
-            player->velocity.y += PLAYER_BUOYANCY;
+        float buoyancyForce = PLAYER_BUOYANCY;
+        float gravityFactor;
+        
+        // Apply different physics based on whether player is fully underwater or at surface
+        if (player->isFullyUnderwater) {
+            // Fully underwater - minimal gravity for more "flying-like" controls
+            gravityFactor = UNDERWATER_GRAVITY_FACTOR;
+            
+            // Basic buoyancy when fully underwater
+            if (!player->isOnGround) {
+                player->velocity.y += buoyancyForce;
+            }
+        } else {
+            // At surface - stronger buoyancy to push player up and keep them there
+            gravityFactor = SURFACE_GRAVITY_FACTOR;
+            
+            // Apply stronger buoyancy near the surface to create floating effect
+            if (!player->isOnGround) {
+                player->velocity.y += buoyancyForce * SURFACE_BUOYANCY_FACTOR;
+            }
         }
         
-        // Apply a smaller gravity force in water (buoyancy counteracts some gravity)
-        player->velocity.y -= PLAYER_GRAVITY * 0.5f;
+        // Apply appropriate gravity based on water state
+        player->velocity.y -= PLAYER_GRAVITY * gravityFactor;
         
-        // Cap vertical velocity in water for smooth floating
-        if (player->velocity.y > 0.1f) player->velocity.y = 0.1f;
-        if (player->velocity.y < -0.1f) player->velocity.y = -0.1f;
+        // Implement smooth transitions between underwater and surface states
+        // This creates a more natural feeling when entering/exiting water
+        if ((wasInWater != player->isInWater) || (wasFullyUnderwater != player->isFullyUnderwater)) {
+            // Dampen velocity for smoother transition
+            player->velocity.y *= 0.7f;
+        }
+        
+        // Cap vertical velocity in water for smooth swimming
+        // Higher limit when actively swimming, lower limit for passive floating
+        float maxSpeed = IsKeyDown(KEY_SPACE) || IsKeyDown(KEY_LEFT_CONTROL) ? 
+                         WATER_MAX_VERTICAL_SPEED : WATER_MAX_VERTICAL_SPEED * 0.5f;
+                         
+        if (player->velocity.y > maxSpeed) player->velocity.y = maxSpeed;
+        if (player->velocity.y < -maxSpeed) player->velocity.y = -maxSpeed;
     } else {
         // Apply normal gravity if not in water and not on ground
         if (!player->isOnGround) {
             player->velocity.y -= PLAYER_GRAVITY;
+        }
+        
+        // If just exited water, apply a small upward boost for smoother transition
+        if (wasInWater && !player->isInWater) {
+            player->velocity.y += PLAYER_BUOYANCY * 0.5f;
         }
     }
     
