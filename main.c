@@ -17,7 +17,7 @@ const Color BLOCK_COLORS[BLOCK_TYPE_COUNT] = {
 };
 
 // Define render distance (how far to render blocks)
-#define RENDER_DISTANCE 32
+#define RENDER_DISTANCE 48
 
 // Draw a single block face
 void DrawBlockFace(int x, int y, int z, int faceDir, Color color) {
