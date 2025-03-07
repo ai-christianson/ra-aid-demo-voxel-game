@@ -147,6 +147,23 @@ void GenerateTerrain(World* world) {
         }
     }
     
+    // Add water at or below WATER_LEVEL
+    for (int x = 0; x < WORLD_SIZE_X; x++) {
+        for (int z = 0; z < WORLD_SIZE_Z; z++) {
+            int idx = x + z * WORLD_SIZE_X;
+            float height = heightMap[idx];
+            int intHeight = (int)floorf(height);
+            
+            // Add water from terrain height up to WATER_LEVEL
+            for (int y = intHeight + 1; y <= WATER_LEVEL; y++) {
+                // Only replace empty blocks with water
+                if (GetBlock(world, x, y, z) == BLOCK_EMPTY) {
+                    SetBlock(world, x, y, z, BLOCK_WATER);
+                }
+            }
+        }
+    }
+    
     // Cleanup
     free(heightMap);
     free(sandNoise);

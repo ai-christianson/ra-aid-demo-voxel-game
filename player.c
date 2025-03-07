@@ -27,6 +27,7 @@ Player* CreatePlayer(World* world) {
         // Initialize state
         player->isOnGround = false;
         player->isJumping = false;
+        player->isInWater = false;
     }
     
     return player;
@@ -80,24 +81,27 @@ void HandlePlayerInput(Player* player) {
         cosf(player->rotationAngle + PI/2) 
     };
     
+    // Calculate the movement speed (reduced in water)
+    float moveSpeed = player->isInWater ? PLAYER_MOVE_SPEED * WATER_MOVEMENT_FACTOR : PLAYER_MOVE_SPEED;
+    
     // Move forward/backward (W/S keys)
     if (IsKeyDown(KEY_W)) {
-        player->velocity.x += forward.x * PLAYER_MOVE_SPEED;
-        player->velocity.z += forward.z * PLAYER_MOVE_SPEED;
+        player->velocity.x += forward.x * moveSpeed;
+        player->velocity.z += forward.z * moveSpeed;
     }
     if (IsKeyDown(KEY_S)) {
-        player->velocity.x -= forward.x * PLAYER_MOVE_SPEED;
-        player->velocity.z -= forward.z * PLAYER_MOVE_SPEED;
+        player->velocity.x -= forward.x * moveSpeed;
+        player->velocity.z -= forward.z * moveSpeed;
     }
     
     // Strafe left/right (A/D keys)
     if (IsKeyDown(KEY_A)) {
-        player->velocity.x += right.x * PLAYER_MOVE_SPEED;
-        player->velocity.z += right.z * PLAYER_MOVE_SPEED;
+        player->velocity.x += right.x * moveSpeed;
+        player->velocity.z += right.z * moveSpeed;
     }
     if (IsKeyDown(KEY_D)) {
-        player->velocity.x -= right.x * PLAYER_MOVE_SPEED;
-        player->velocity.z -= right.z * PLAYER_MOVE_SPEED;
+        player->velocity.x -= right.x * moveSpeed;
+        player->velocity.z -= right.z * moveSpeed;
     }
     
     // Jump (Space key)
@@ -115,9 +119,37 @@ void UpdatePlayerPhysics(Player* player, World* world) {
     // Store old position for collision resolution
     Vector3 oldPosition = player->position;
     
-    // Apply gravity if not on ground
-    if (!player->isOnGround) {
-        player->velocity.y -= PLAYER_GRAVITY;
+    // Check if player is in water
+    int playerX = (int)player->position.x;
+    int playerY = (int)player->position.y;
+    int playerZ = (int)player->position.z;
+    int headY = (int)(player->position.y + player->size.y * 0.9f); // Check at head level
+    
+    // Get block at player's position
+    BlockType blockAtPlayer = GetBlock(world, playerX, playerY, playerZ);
+    BlockType blockAtHead = GetBlock(world, playerX, headY, playerZ);
+    
+    // Update water state
+    player->isInWater = (blockAtPlayer == BLOCK_WATER || blockAtHead == BLOCK_WATER);
+    
+    // Apply appropriate physics based on environment
+    if (player->isInWater) {
+        // Apply buoyancy force (opposite of gravity) when in water
+        if (!player->isOnGround) {
+            player->velocity.y += PLAYER_BUOYANCY;
+        }
+        
+        // Apply a smaller gravity force in water (buoyancy counteracts some gravity)
+        player->velocity.y -= PLAYER_GRAVITY * 0.5f;
+        
+        // Cap vertical velocity in water for smooth floating
+        if (player->velocity.y > 0.1f) player->velocity.y = 0.1f;
+        if (player->velocity.y < -0.1f) player->velocity.y = -0.1f;
+    } else {
+        // Apply normal gravity if not in water and not on ground
+        if (!player->isOnGround) {
+            player->velocity.y -= PLAYER_GRAVITY;
+        }
     }
     
     // Update position based on velocity

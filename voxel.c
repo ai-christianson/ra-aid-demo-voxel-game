@@ -13,6 +13,11 @@ const int DIRECTION_VECTORS[6][3] = {
     { 0, 0,-1 }  // Back
 };
 
+// Check if a block type is transparent
+bool IsBlockTransparent(BlockType blockType) {
+    return blockType == BLOCK_EMPTY || blockType == BLOCK_WATER;
+}
+
 // Create a new empty world
 World* CreateWorld(void) {
     World* world = (World*)malloc(sizeof(World));
@@ -76,8 +81,14 @@ bool IsBlockFaceVisible(World* world, int x, int y, int z, int faceDir) {
         return true;
     }
     
-    // A face is visible if the adjacent block is empty
-    return GetBlock(world, nx, ny, nz) == BLOCK_EMPTY;
+    // Get the adjacent block
+    BlockType adjacentBlock = GetBlock(world, nx, ny, nz);
+    
+    // A face is visible if:
+    // 1. The adjacent block is empty, or
+    // 2. The adjacent block is transparent (like water) and the current block is not transparent
+    return adjacentBlock == BLOCK_EMPTY || 
+           (IsBlockTransparent(adjacentBlock) && !IsBlockTransparent(GetBlock(world, x, y, z)));
 }
 
 // Get a bounding box for a specific block

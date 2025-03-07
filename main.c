@@ -13,7 +13,8 @@ const Color BLOCK_COLORS[BLOCK_TYPE_COUNT] = {
     { 0, 0, 0, 0 },        // BLOCK_EMPTY (transparent)
     { 34, 139, 34, 255 },  // BLOCK_GRASS (forest green)
     { 210, 180, 140, 255 },// BLOCK_SAND (tan)
-    { 128, 128, 128, 255 } // BLOCK_STONE (gray)
+    { 128, 128, 128, 255 },// BLOCK_STONE (gray)
+    { 64, 164, 223, 150 }  // BLOCK_WATER (semi-transparent blue)
 };
 
 // Define render distance (how far to render blocks)
@@ -115,15 +116,15 @@ void RenderWorld(World* world, Player* player) {
     endY = (endY >= WORLD_SIZE_Y) ? WORLD_SIZE_Y - 1 : endY;
     endZ = (endZ >= WORLD_SIZE_Z) ? WORLD_SIZE_Z - 1 : endZ;
 
-    // Iterate through visible blocks
+    // First pass: Render opaque blocks
     for (int x = startX; x <= endX; x++) {
         for (int y = startY; y <= endY; y++) {
             for (int z = startZ; z <= endZ; z++) {
                 // Get the block type
                 BlockType blockType = GetBlock(world, x, y, z);
 
-                // Skip empty blocks
-                if (blockType == BLOCK_EMPTY) continue;
+                // Skip empty blocks and transparent blocks (will be rendered in second pass)
+                if (blockType == BLOCK_EMPTY || IsBlockTransparent(blockType)) continue;
 
                 // Get the color for this block type
                 Color blockColor = BLOCK_COLORS[blockType];
@@ -137,6 +138,32 @@ void RenderWorld(World* world, Player* player) {
             }
         }
     }
+
+    // Second pass: Render transparent blocks
+    // Enable alpha blending for transparent objects
+    BeginBlendMode(BLEND_ALPHA);
+    for (int x = startX; x <= endX; x++) {
+        for (int y = startY; y <= endY; y++) {
+            for (int z = startZ; z <= endZ; z++) {
+                // Get the block type
+                BlockType blockType = GetBlock(world, x, y, z);
+
+                // Only render transparent blocks (not empty and transparent)
+                if (blockType == BLOCK_EMPTY || !IsBlockTransparent(blockType)) continue;
+
+                // Get the color for this block type
+                Color blockColor = BLOCK_COLORS[blockType];
+
+                // Check and draw each visible face
+                for (int faceDir = 0; faceDir < 6; faceDir++) {
+                    if (IsBlockFaceVisible(world, x, y, z, faceDir)) {
+                        DrawBlockFace(x, y, z, faceDir, blockColor);
+                    }
+                }
+            }
+        }
+    }
+    EndBlendMode();
 }
 
 // Draw a simple crosshair in the center of the screen

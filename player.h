@@ -13,6 +13,10 @@
 #define PLAYER_DEPTH 0.6f
 #define MOUSE_SENSITIVITY 0.003f
 
+// Water physics constants
+#define PLAYER_BUOYANCY 0.2f      // Buoyancy force in water
+#define WATER_MOVEMENT_FACTOR 0.6f // Movement speed reduction in water
+
 // Player structure
 typedef struct {
     Vector3 position;        // Player position in the world
@@ -22,6 +26,7 @@ typedef struct {
     float pitchAngle;        // Camera pitch
     bool isOnGround;         // Whether the player is on the ground
     bool isJumping;          // Whether the player is currently jumping
+    bool isInWater;          // Whether the player is in water
 } Player;
 
 // Function prototypes

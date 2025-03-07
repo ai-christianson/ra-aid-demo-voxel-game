@@ -10,6 +10,7 @@ typedef enum {
     BLOCK_GRASS,
     BLOCK_SAND,
     BLOCK_STONE,
+    BLOCK_WATER,
     BLOCK_TYPE_COUNT
 } BlockType;
 
@@ -38,5 +39,6 @@ BoundingBox GetBlockBoundingBox(int x, int y, int z);
 
 // Rendering optimization
 bool IsBlockFaceVisible(World* world, int x, int y, int z, int faceDir);
+bool IsBlockTransparent(BlockType blockType);
 
 #endif // VOXEL_H

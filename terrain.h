@@ -12,6 +12,9 @@
 #define SAND_HEIGHT_THRESHOLD 12  // Below this height, use sand instead of grass
 #define BEACH_NOISE_THRESHOLD 0.3f // Secondary noise threshold for creating sand patches
 
+// Water level
+#define WATER_LEVEL 16  // Height at which water will be placed
+
 // Function prototypes for noise generation
 float GenerateNoise2D(float x, float z, float scale);
 float Interpolate(float a, float b, float t);
